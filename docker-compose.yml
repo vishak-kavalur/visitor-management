@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  # Next.js application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vms-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://mongodb:27017/visitor_management
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - SOCKET_SERVER_URL=http://socket-server:3001
+    depends_on:
+      - mongodb
+    networks:
+      - vms-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # Socket.io server for real-time notifications
+  socket-server:
+    build:
+      context: ./socket-server
+      dockerfile: Dockerfile
+    container_name: vms-socket
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    networks:
+      - vms-network
+    depends_on:
+      - mongodb
+
+  # MongoDB database
+  mongodb:
+    image: mongo:7.0
+    container_name: vms-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    environment:
+      - MONGO_INITDB_DATABASE=visitor_management
+    networks:
+      - vms-network
+    command: ["--wiredTigerCacheSizeGB", "1"]
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/visitor_management --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  # Nginx for reverse proxy and SSL termination
+  nginx:
+    image: nginx:alpine
+    container_name: vms-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./nginx/logs:/var/log/nginx
+    depends_on:
+      - app
+    networks:
+      - vms-network
+
+networks:
+  vms-network:
+    driver: bridge
+
+volumes:
+  mongodb-data:
+    driver: local

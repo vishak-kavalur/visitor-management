@@ -1,0 +1,13 @@
+{
+  "name": "vms-testing-tools",
+  "version": "1.0.0",
+  "description": "Testing utilities for Visitor Management System",
+  "type": "module",
+  "scripts": {
+    "test:e2e": "node end-to-end-test.mjs",
+    "test:deployment": "bash test-deployment.sh"
+  },
+  "dependencies": {
+    "axios": "^1.6.5"
+  }
+}
