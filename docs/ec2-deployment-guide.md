@@ -23,7 +23,7 @@ Since there are port conflicts with existing applications, we'll modify our depl
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-organization/visitor-management-system.git
+git clone https://github.com/vishak-kavalur/visitor-management.git
 cd visitor-management-system
 ```
 
