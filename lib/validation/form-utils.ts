@@ -7,7 +7,7 @@ import { validationPatterns, errorMessages, baseSchemas } from './validation-uti
  * Helper to use with React Hook Form
  * @param schema Zod schema
  */
-export const getZodResolver = (schema: z.ZodSchema) => {
+export const getZodResolver = (schema: z.ZodType<unknown, unknown, never>) => {
   return zodResolver(schema);
 };
 

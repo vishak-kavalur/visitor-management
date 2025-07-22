@@ -34,7 +34,14 @@ export const authOptions: NextAuthOptions = {
           await dbConnect();
 
           // Find the host by email
-          const host = await Host.findByEmail(email);
+          const host = await Host.findByEmail(email) as {
+            _id: { toString: () => string },
+            fullName: string,
+            email: string,
+            password: string,
+            role: string,
+            departmentId?: { toString: () => string } | null
+          } | null;
           
           if (!host) {
             console.error('Authentication failed: Account not found');

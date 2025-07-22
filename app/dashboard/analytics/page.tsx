@@ -393,7 +393,16 @@ export default function AnalyticsPage() {
                     <CircularProgress />
                   </Box>
                 ) : (
-                  <DepartmentStatsChart data={departmentsData?.data?.data || []} />
+                  <DepartmentStatsChart
+                    data={
+                      departmentsData?.data?.data
+                        ? departmentsData.data.data.map((dept) => ({
+                            ...dept,
+                            departmentId: dept._id,
+                          }))
+                        : []
+                    }
+                  />
                 )}
               </Paper>
             </Grid>

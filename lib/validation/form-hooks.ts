@@ -1,4 +1,4 @@
-import { useForm, UseFormProps, FieldValues, DefaultValues } from 'react-hook-form';
+import { useForm, UseFormProps, FieldValues, DefaultValues, Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState } from 'react';
@@ -11,15 +11,17 @@ import { formatZodErrors } from './validation-utils';
  * @returns Form methods, state and error handling utilities
  */
 export function useZodForm<T extends FieldValues>(
-  schema: z.ZodSchema<T>,
+  schema: z.ZodType<T, unknown, never>,
   options: Omit<UseFormProps<T>, 'resolver'> = {}
 ) {
   const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
+  // Using type assertion to bypass type checking issues between zod and react-hook-form
+  // This is necessary due to an incompatibility between the types expected by zodResolver and useForm
   const form = useForm<T>({
     ...options,
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<T>,
   });
 
   const handleSubmit = async <R>(
@@ -34,7 +36,7 @@ export function useZodForm<T extends FieldValues>(
       // Success handler
       async (data) => {
         try {
-          return await onValid(data);
+          return await onValid(data as T);
         } catch (error) {
           if (error instanceof z.ZodError) {
             const errors = formatZodErrors(error);

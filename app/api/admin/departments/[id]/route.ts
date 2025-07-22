@@ -35,7 +35,7 @@ function isValidObjectId(id: string): boolean {
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check authentication and authorization
@@ -50,7 +50,7 @@ export async function GET(
     }
 
     // Validate ID
-    const id = params.id;
+    const { id } = await params;
     if (!isValidObjectId(id)) {
       return errorResponse('Invalid department ID', HTTP_STATUS.BAD_REQUEST);
     }
@@ -88,7 +88,7 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params:  Promise<{ id: string }> }
 ) {
   try {
     // Check authentication and authorization
@@ -103,7 +103,7 @@ export async function PUT(
     }
 
     // Validate ID
-    const id = params.id;
+    const { id } = await params;
     if (!isValidObjectId(id)) {
       return errorResponse('Invalid department ID', HTTP_STATUS.BAD_REQUEST);
     }
@@ -158,7 +158,7 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check authentication and authorization
@@ -173,7 +173,7 @@ export async function DELETE(
     }
 
     // Validate ID
-    const id = params.id;
+    const { id } = await params;
     if (!isValidObjectId(id)) {
       return errorResponse('Invalid department ID', HTTP_STATUS.BAD_REQUEST);
     }

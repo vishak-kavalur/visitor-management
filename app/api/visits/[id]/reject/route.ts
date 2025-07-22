@@ -13,10 +13,10 @@ import mongoose from 'mongoose';
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const visitId = params.id;
+    const visitId = (await params).id;
     
     // Validate visit ID
     if (!visitId || !mongoose.Types.ObjectId.isValid(visitId)) {

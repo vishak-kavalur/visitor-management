@@ -15,7 +15,7 @@ export type SortOptions = Record<string, SortOrder | { $meta: 'textScore' }>;
 /**
  * Type for populate options
  */
-export type PopulateOption = string | PopulateOptions | (string | PopulateOptions)[];
+export type PopulateOption = PopulateOptions | (string | PopulateOptions)[];
 
 /**
  * Error types for database operations

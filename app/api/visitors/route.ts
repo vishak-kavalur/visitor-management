@@ -42,7 +42,9 @@ export async function GET(request: NextRequest) {
       return handleApiError(validationResult.error);
     }
     
-    const { aadhaarNumber, fullName, page, limit } = validationResult.data;
+    const { aadhaarNumber, fullName } = validationResult.data ?? {};
+    const page = validationResult.data?.page ?? 1;
+    const limit = validationResult.data?.limit ?? 10;
     
     // Build search query
     const query: Record<string, unknown> = {};
@@ -128,7 +130,7 @@ export async function POST(request: NextRequest) {
       return handleApiError(validationResult.error);
     }
     
-    const { aadhaarNumber, fullName, imageBase64 } = validationResult.data;
+    const { aadhaarNumber, fullName, imageBase64 } = validationResult.data ?? {};
     
     try {
       // Check if visitor already exists

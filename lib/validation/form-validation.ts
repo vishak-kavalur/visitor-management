@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from 'zod';
-import { useForm } from 'react-hook-form';
+import { useForm, FieldValues } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 /**
@@ -9,13 +10,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
  * @param defaultValues - Default values for the form
  * @returns React Hook Form methods and state
  */
-export function useZodForm<T extends z.ZodSchema>(
+export function useZodForm<T extends z.ZodType<any, any, any>>(
   schema: T,
-  defaultValues?: z.infer<T>
+  defaultValues?: Partial<z.infer<T>>
 ) {
-  return useForm({
-    resolver: zodResolver(schema),
-    defaultValues,
+  type FormData = z.infer<T>;
+  
+  return useForm<FormData>({
+    resolver: zodResolver(schema) as any,
+    defaultValues: defaultValues as FormData,
   });
 }
 

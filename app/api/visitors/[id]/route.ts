@@ -24,7 +24,7 @@ function isValidObjectId(id: string): boolean {
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check authentication
@@ -34,7 +34,7 @@ export async function GET(
     }
 
     // Validate ID
-    const id = params.id;
+    const id = (await params).id;
     if (!isValidObjectId(id)) {
       return errorResponse('Invalid visitor ID', HTTP_STATUS.BAD_REQUEST);
     }
@@ -69,7 +69,7 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check authentication
@@ -79,7 +79,7 @@ export async function PUT(
     }
 
     // Validate ID
-    const id = params.id;
+    const id = (await params).id;
     if (!isValidObjectId(id)) {
       return errorResponse('Invalid visitor ID', HTTP_STATUS.BAD_REQUEST);
     }
@@ -125,7 +125,7 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check authentication
@@ -135,7 +135,7 @@ export async function DELETE(
     }
 
     // Validate ID
-    const id = params.id;
+    const id = (await params).id;
     if (!isValidObjectId(id)) {
       return errorResponse('Invalid visitor ID', HTTP_STATUS.BAD_REQUEST);
     }

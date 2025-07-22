@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { Box, Button, Container, Paper, Typography, Alert, CircularProgress, Checkbox, FormControlLabel } from '@mui/material';
 import Link from 'next/link';
 import { useAuth } from '../../lib/auth/client';
@@ -11,7 +11,42 @@ import { formSchemas, LoginFormData } from '../../lib/validation/form-schemas';
 import { FormTextField } from '../../components/ui/FormField';
 import { notifications } from '../../components/ui/Notifications';
 
-export default function LoginPage() {
+// Loading component for Suspense fallback
+function LoginLoading() {
+  return (
+    <Container component="main" maxWidth="xs">
+      <Box
+        sx={{
+          marginTop: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Paper
+          elevation={3}
+          sx={{
+            p: 4,
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            minHeight: 400,
+            justifyContent: 'center',
+          }}
+        >
+          <CircularProgress size={40} />
+          <Typography variant="body2" sx={{ mt: 2 }}>
+            Loading...
+          </Typography>
+        </Paper>
+      </Box>
+    </Container>
+  );
+}
+
+// Login form component that uses useSearchParams
+function LoginForm() {
   const [formError, setFormError] = useState<string | null>(null);
   const { login, error: authError, loading } = useAuth();
   const searchParams = useSearchParams();
@@ -155,5 +190,14 @@ export default function LoginPage() {
         </Box>
       </Box>
     </Container>
+  );
+}
+
+// Main page component with Suspense boundary
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginLoading />}>
+      <LoginForm />
+    </Suspense>
   );
 }
