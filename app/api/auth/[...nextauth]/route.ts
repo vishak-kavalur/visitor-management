@@ -1,10 +1,9 @@
 import NextAuth from 'next-auth/next';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { z } from 'zod';
+import bcrypt from 'bcryptjs';
 import dbConnect from '../../../../lib/db/mongoose';
 import Host from '../../../../lib/db/models/host';
-import { HostDocument } from '../../../../types/database';
-import { Headers } from 'next/dist/compiled/@edge-runtime/primitives';
 
 // Define the login schema with Zod
 const loginSchema = z.object({
@@ -17,27 +16,8 @@ const loginSchema = z.object({
  *
  * This configures authentication for the Visitor Management System:
  * - Uses a credentials provider to authenticate against the Host model
- * - Implements JWT session handling
+ * - Implements JWT session handling with HTTP-only cookies
  * - Adds custom fields to the JWT token and session
- *
- * SECURITY NOTICE:
- * - This implementation uses plaintext password comparison for PoC purposes only
- * - In a production environment, passwords should be properly hashed with bcrypt or Argon2
- * - Additional security measures like rate limiting should be implemented
- */
-/**
- * NextAuth.js configuration
- *
- * This configures authentication for the Visitor Management System with a cookie-less approach:
- * - Uses a credentials provider to authenticate against the Host model
- * - Implements token-based authentication without cookies
- * - Returns tokens directly instead of storing in cookies
- * - Adds custom fields to the JWT token and session
- *
- * SECURITY NOTICE:
- * - This implementation uses plaintext password comparison for PoC purposes only
- * - In a production environment, passwords should be properly hashed with bcrypt or Argon2
- * - Additional security measures like rate limiting should be implemented
  */
 const handler = NextAuth({
   providers: [
@@ -67,16 +47,25 @@ const handler = NextAuth({
             return null;
           }
 
-          // Compare passwords
-          // WARNING: This compares plaintext passwords for PoC only
-          // In production, this should use a proper password hashing library
-          const isValidPassword = host.password === password;
+          // Check if passwords match - depending on how they're stored
+          let isValidPassword;
+          
+          // Handle both hashed and plaintext passwords
+          if (host.password.startsWith('$2')) {
+            // Password is bcrypt hashed
+            isValidPassword = await bcrypt.compare(password, host.password);
+          } else {
+            // Password is plaintext (for PoC as mentioned in Host model)
+            isValidPassword = password === host.password;
+          }
 
           if (!isValidPassword) {
-            console.error('Authentication failed: Invalid credentials');
+            console.error('!! Authentication failed: Invalid credentials');
             return null;
           }
 
+          console.log('Authentication successful for user:', host.email);
+          
           // Return user data for token generation (excluding password)
           return {
             id: host._id?.toString(),
@@ -92,53 +81,34 @@ const handler = NextAuth({
       },
     }),
   ],
-  session: {
-    strategy: 'jwt',
-    maxAge: 8 * 60 * 60, // 8 hours
+  pages: {
+    signIn: '/login',
+    error: '/login',
   },
   callbacks: {
     async jwt({ token, user }) {
-      // Add role, departmentId and other custom fields to the token
       if (user) {
-        token.role = user.role as string;
-        token.id = user.id as string;
-        token.departmentId = user.departmentId || null;
+        token.id = user.id;
+        token.role = user.role;
+        token.departmentId = user.departmentId;
       }
       return token;
     },
     async session({ session, token }) {
-      // Add custom fields to the session
       if (session.user) {
-        session.user.role = token.role;
         session.user.id = token.id;
+        session.user.role = token.role;
         session.user.departmentId = token.departmentId;
       }
       return session;
     },
   },
-  pages: {
-    signIn: '/login',
-    error: '/login',
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   secret: process.env.NEXTAUTH_SECRET,
-  // For a POC, we're using header-based token auth instead of cookies
-  useSecureCookies: false,
-  jwt: {
-    // Disable cookie encryption to allow custom token handling
-    encode: async ({ token, secret }) => {
-      if (!token) return "";
-      return JSON.stringify(token);
-    },
-    decode: async ({ token, secret }) => {
-      if (!token) return null;
-      try {
-        return JSON.parse(token);
-      } catch (e) {
-        return null;
-      }
-    },
-  },
+  debug: process.env.NODE_ENV === 'development',
 });
 
-// In Next.js App Router, we export the handler directly
 export { handler as GET, handler as POST };

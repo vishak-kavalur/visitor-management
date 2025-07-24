@@ -22,6 +22,7 @@ The Visitor Management System (VMS) is designed to streamline the process of man
 - Real-time dashboard with analytics
 - Role-based access control
 - Real-time notifications via Socket.IO
+- Face recognition for visitor verification and check-in
 
 The system runs on the following components:
 - Main web application: Port 4000
@@ -141,7 +142,10 @@ As a SuperAdmin, you have full access to all system functionality.
 1. Navigate to "Dashboard" or "Visits" in the sidebar
 2. Locate pending visits in the list
 3. Click the "Approve" or "Reject" button for each visit
-4. For approved visits, the visitor and host will receive real-time notifications
+4. For approved visits:
+   - The visitor and host will receive real-time notifications
+   - The visitor's face is automatically registered in the face recognition system
+   - This enables face verification during check-in
 
 ## Admin Guide
 
@@ -166,10 +170,34 @@ Follow the same steps as in the SuperAdmin guide, with these limitations:
 3. For approved visits, the visitor and host will receive real-time notifications
 
 #### Check-In and Check-Out
+
+##### Manual Check-In/Check-Out
 1. When a visitor arrives, locate their approved visit
 2. Click the "Check In" button to record their arrival
-3. When they leave, click the "Check Out" button
-4. These status changes are updated in real-time across all connected devices
+3. When they leave, locate their checked-in visit
+4. Click the "Check Out" button to record their departure
+5. These status changes are updated in real-time across all connected devices
+
+##### Face Recognition Check-In and Check-Out
+1. When a visitor arrives, click the "Verify Face" button on their approved visit
+2. Select the operation type: "Check In"
+3. The system will activate the camera to capture the visitor's face
+4. The captured image is automatically sent to the face recognition system
+5. If the face matches the registered visitor (similarity >= 0.9):
+   - The visit status is automatically updated to "CheckedIn"
+   - The check-in time is recorded
+   - Real-time notifications are sent to relevant users
+6. If the face doesn't match:
+   - An error message is displayed
+   - You can try again or use manual check-in as a fallback
+
+7. When a visitor is leaving, click the "Verify Face" button on their checked-in visit
+8. Select the operation type: "Check Out"
+9. The system will activate the camera to capture the visitor's face
+10. If the face matches and verification is successful:
+    - The visit status is automatically updated to "CheckedOut"
+    - The check-out time is recorded
+    - Real-time notifications are sent to relevant users
 
 ### Managing Visitors
 
@@ -230,6 +258,43 @@ As a Host, you can manage visitors and your own visits.
    - New visit requests (for admins)
    - System announcements
 
+## Face Verification Features
+
+### How Face Registration Works
+- When a visit is approved, the visitor's face is automatically registered in the face recognition system
+- The system uses the photo provided during visitor registration
+- The visitor's ID is used as the unique identifier in the face recognition system
+- No additional action is required from administrators or hosts for face registration
+
+### How Face Verification Works
+1. During check-in or check-out, the visitor's face is captured using the device camera
+2. The operation type (check-in or check-out) must be specified
+3. The captured image is sent to the face recognition system for verification
+4. The system compares the captured face against registered faces
+5. A similarity score is calculated (ranging from 0 to 1)
+6. If the similarity is 0.9 or higher, the visitor is considered verified
+7. Upon successful verification:
+   - For check-in: The visit status is updated from "Approved" to "CheckedIn"
+   - For check-out: The visit status is updated from "CheckedIn" to "CheckedOut"
+8. The appropriate timestamp (check-in or check-out) is recorded automatically
+
+### Status Validation Requirements
+- Check-in operations can only be performed on visits with "Approved" status
+- Check-out operations can only be performed on visits with "CheckedIn" status
+- If a verification is attempted with the wrong status, an error message will be displayed
+
+### Requirements for Effective Face Verification
+- Good lighting conditions for clear face capture
+- Visitor should be facing the camera directly
+- No obstructions (masks, sunglasses, etc.) that significantly cover facial features
+- The original visitor photo should be clear and show the face properly
+
+### Troubleshooting Face Verification
+- If verification fails, try capturing the image again with better lighting
+- Ensure the visitor's face is clearly visible and directly facing the camera
+- As a fallback, use the manual check-in process
+- If problems persist, verify that the visitor's photo in the system is clear and recent
+
 ## Common Tasks
 
 ### Searching for Information
@@ -280,6 +345,13 @@ As a Host, you can manage visitors and your own visits.
 - Check if a firewall is blocking port 4001
 - Try refreshing the page to reestablish the connection
 - Verify that both application servers (port 4000 and 4001) are running
+
+#### Face Verification Issues
+- Ensure your browser allows camera access
+- Check if your device has a working camera
+- Ensure adequate lighting for clear face capture
+- Try refreshing the page if the camera doesn't activate
+- If verification fails repeatedly, use manual check-in as a fallback
 
 ### Getting Help
 

@@ -556,6 +556,64 @@
 						"description": "Delete a visit"
 					},
 					"response": []
+				},
+				{
+					"name": "Face Verification - Check In",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"imageBase64\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==\",\n    \"type\": \"CHECKIN\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/visits/facematch",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"visits",
+								"facematch"
+							]
+						},
+						"description": "Verify visitor's face for check-in. Only works on visits with 'Approved' status."
+					},
+					"response": []
+				},
+				{
+					"name": "Face Verification - Check Out",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"imageBase64\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==\",\n    \"type\": \"CHECKOUT\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/visits/facematch",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"visits",
+								"facematch"
+							]
+						},
+						"description": "Verify visitor's face for check-out. Only works on visits with 'CheckedIn' status."
+					},
+					"response": []
 				}
 			]
 		},

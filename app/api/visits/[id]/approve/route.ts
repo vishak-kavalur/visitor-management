@@ -3,8 +3,10 @@ import { getCurrentUser } from '../../../../../lib/auth/session';
 import { hasRole, canAccessResource, createAuthError, createPermissionError } from '../../../../../lib/auth/session';
 import dbConnect from '../../../../../lib/db/mongoose';
 import Visit from '../../../../../lib/db/models/visit';
+import Visitor from '../../../../../lib/db/models/visitor';
 import Host from '../../../../../lib/db/models/host';
 import mongoose from 'mongoose';
+import { registerVisitorFace } from '../../../../../lib/utils/face-recognition';
 
 /**
  * POST /api/visits/[id]/approve
@@ -84,6 +86,41 @@ export async function POST(
       timestamp: new Date()
     };
     await visit.save();
+
+    // After successful approval, register the visitor's face in the face recognition system
+    try {
+      // Get the visitor details including the image
+      const visitor = await Visitor.findById(visit.visitorId).exec();
+      
+      if (visitor) {
+        // Need to cast to the correct type to access fields
+        const visitorDoc = visitor as unknown as { _id: mongoose.Types.ObjectId; imageBase64?: string };
+        
+        if (visitorDoc.imageBase64) {
+          const visitorId = visitorDoc._id.toString();
+          // Start an asynchronous process to register the visitor's face
+          // We don't await this to avoid delaying the approval response
+          registerVisitorFace(visitorId, visitorDoc.imageBase64)
+            .then(result => {
+              if (result.success) {
+                console.log(`Successfully registered visitor ${visitorId} in face recognition system`);
+              } else {
+                console.error(`Failed to register visitor in face recognition system: ${result.error}`);
+              }
+            })
+            .catch(error => {
+              console.error('Error during face registration process:', error);
+            });
+        } else {
+          console.warn(`Visitor ${visit.visitorId} found but has no image for face registration`);
+        }
+      } else {
+        console.warn(`Visitor ${visit.visitorId} not found for face registration`);
+      }
+    } catch (faceError) {
+      // Log the error but don't interrupt the approval flow
+      console.error('Error trying to register visitor face:', faceError);
+    }
     
     return NextResponse.json({
       success: true,

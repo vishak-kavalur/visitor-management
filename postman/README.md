@@ -82,10 +82,29 @@ For a complete testing flow, follow this sequence:
 2. Create a host (store hostId)
 3. Create a visitor (store visitorId)
 4. Create a visit (store visitId)
-5. Test status updates on the visit
+5. Test status updates on the visit:
+   - Use "Approve" endpoint to change status to "Approved"
+   - Use "Face Verification - Check In" to check in the visitor (changes status to "CheckedIn")
+   - Use "Face Verification - Check Out" to check out the visitor (changes status to "CheckedOut")
 6. Test analytics endpoints
 7. Test dashboard endpoints
 8. Test real-time notifications via Socket.IO
+
+## Face Verification Testing
+
+The collection now includes dedicated requests for testing the enhanced face verification functionality:
+
+1. **Face Verification - Check In**:
+   - Used to verify a visitor's face during check-in
+   - Requires the visit to have "Approved" status
+   - Includes the "type" parameter set to "CHECKIN"
+   - Upon successful verification, updates visit status to "CheckedIn"
+   
+2. **Face Verification - Check Out**:
+   - Used to verify a visitor's face during check-out
+   - Requires the visit to have "CheckedIn" status
+   - Includes the "type" parameter set to "CHECKOUT"
+   - Upon successful verification, updates visit status to "CheckedOut"
 
 ## Notes
 

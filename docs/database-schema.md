@@ -81,6 +81,12 @@ Stores information about visitors who enter the facility.
 #### Methods
 - `findByAadhaar`: Find a visitor by Aadhaar number
 
+#### Face Recognition Integration
+- The `_id` field of the Visitor document is used as the subject ID in the external face recognition system
+- The `imageBase64` field is used to register the visitor's face in the recognition system
+- Face registration occurs automatically when a visit is approved
+- Face verification during check-in uses the registered face data to identify the visitor
+
 ---
 
 ### Hosts Collection
@@ -302,6 +308,14 @@ Stores information about visits to the facility.
 
 #### Real-time Updates
 Visit status changes now trigger real-time notifications through the Socket.IO server running on port 4001.
+
+#### Face Recognition Integration
+- When a visit is approved, the system automatically registers the visitor's face in the face recognition system
+- The `visitorId` field is used to link the visit to the correct face record in the recognition system
+- The system now supports both check-in and check-out operations via face verification:
+  - For check-in: Visit status must be "Approved" to proceed, and is updated to "CheckedIn" with `checkInTimestamp` set
+  - For check-out: Visit status must be "CheckedIn" to proceed, and is updated to "CheckedOut" with `checkOutTimestamp` set
+- The system enforces a similarity threshold of 0.9 for successful face verification during both check-in and check-out
 
 ---
 
@@ -542,3 +556,31 @@ The database now integrates with a Socket.IO server running on port 4001 for rea
 - Notifications are delivered in real-time through Socket.IO in addition to being stored in the database
 
 This integration provides real-time functionality without requiring polling or frequent API requests.
+
+## External Integrations
+
+### Face Recognition System
+
+The Visitor Management System integrates with an external face recognition API for visitor identity verification:
+
+- **Base URL**: http://52.66.95.208:8000/api/v1/recognition
+- **Authentication**: via x-api-token header
+- **Integration Points**:
+  - `/subjects` endpoint - For registering visitor IDs
+  - `/faces` endpoint - For uploading face images
+  - `/recognize` endpoint - For face verification
+
+The integration works as follows:
+
+1. **Face Registration**:
+   - When a visit is approved, the visitor's face is registered in the face recognition system
+   - The visitor's MongoDB `_id` is used as the subject ID in the face recognition system
+   - The visitor's `imageBase64` is uploaded as the face image
+
+2. **Face Verification**:
+   - During check-in, the visitor's face is captured and sent to the recognition system
+   - The system returns a similarity score and matched subject ID (visitor ID)
+   - A similarity threshold of 0.9 is required for a successful match
+   - Upon successful verification, the visit status is updated to "CheckedIn"
+
+This integration enhances security by ensuring that only registered visitors can check in, and automating the check-in process through facial recognition.

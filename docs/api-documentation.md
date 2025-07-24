@@ -369,7 +369,7 @@ Update a visit.
 
 ### POST /api/visits/:id/approve
 
-Approve a visit request.
+Approve a visit request. Upon approval, the visitor's face is automatically registered in the face recognition system using their visitor ID as the subject ID. This enables subsequent face verification during check-in.
 
 **Response:**
 ```json
@@ -415,6 +415,90 @@ Delete a visit.
     "id": "visit_id"
   },
   "message": "Visit deleted successfully"
+}
+```
+
+### POST /api/visits/facematch
+
+Verifies a visitor's face against the registered face in the recognition system. If a match is found with sufficient confidence (similarity >= 0.9):
+- For CHECKIN: Updates the corresponding visit status to "CheckedIn" and sets checkInTimestamp
+- For CHECKOUT: Updates the corresponding visit status to "CheckedOut" and sets checkOutTimestamp
+
+**Request Body:**
+```json
+{
+  "imageBase64": "base64_encoded_image",
+  "type": "CHECKIN" // or "CHECKOUT"
+}
+```
+
+**Status Validation:**
+- For CHECKIN: Only visits with status "Approved" can be processed
+- For CHECKOUT: Only visits with status "CheckedIn" can be processed
+
+**Response (Success - Check In):**
+```json
+{
+  "success": true,
+  "data": {
+    "visitor": {
+      "id": "visitor_id",
+      "name": "Visitor Name",
+      "imageBase64": "base64_encoded_image"
+    },
+    "visit": {
+      "id": "visit_id",
+      "status": "CheckedIn",
+      "checkInTime": "2023-01-01T10:00:00.000Z"
+    },
+    "similarity": 0.95
+  },
+  "message": "Visitor successfully checked in"
+}
+```
+
+**Response (Success - Check Out):**
+```json
+{
+  "success": true,
+  "data": {
+    "visitor": {
+      "id": "visitor_id",
+      "name": "Visitor Name",
+      "imageBase64": "base64_encoded_image"
+    },
+    "visit": {
+      "id": "visit_id",
+      "status": "CheckedOut",
+      "checkOutTime": "2023-01-01T15:00:00.000Z"
+    },
+    "similarity": 0.95
+  },
+  "message": "Visitor successfully checked out"
+}
+```
+
+**Response (No Match):**
+```json
+{
+  "success": false,
+  "error": {
+    "message": "No match found",
+    "code": "FACE_MATCH_ERROR"
+  },
+  "statusCode": 500
+}
+```
+
+**Response (Invalid Status):**
+```json
+{
+  "success": false,
+  "error": {
+    "message": "No approved visit found for this visitor",
+    "code": "INVALID_VISIT_STATUS"
+  },
+  "statusCode": 404
 }
 ```
 

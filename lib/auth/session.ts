@@ -3,6 +3,7 @@ import { NextAuthOptions } from "next-auth";
 import { HostRole } from "../../types/database";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { z } from 'zod';
+import bcrypt from 'bcryptjs';
 import dbConnect from "../db/mongoose";
 import Host from "../db/models/host";
 
@@ -48,15 +49,24 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
 
-          // Compare passwords
-          // WARNING: This compares plaintext passwords for PoC only
-          // In production, this should use a proper password hashing library
-          const isValidPassword = host.password === password;
+          // Check if passwords match - depending on how they're stored
+          let isValidPassword;
+          
+          // Handle both hashed and plaintext passwords
+          if (host.password.startsWith('$2')) {
+            // Password is bcrypt hashed
+            isValidPassword = await bcrypt.compare(password, host.password);
+          } else {
+            // Password is plaintext (for PoC as mentioned in Host model)
+            isValidPassword = password === host.password;
+          }
 
           if (!isValidPassword) {
             console.error('Authentication failed: Invalid credentials');
             return null;
           }
+
+          console.log('Authentication successful for user:', host.email);
 
           // Return user data for token generation (excluding password)
           return {
@@ -75,7 +85,7 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: 'jwt',
-    maxAge: 8 * 60 * 60, // 8 hours
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -102,94 +112,30 @@ export const authOptions: NextAuthOptions = {
     error: '/login',
   },
   secret: process.env.NEXTAUTH_SECRET,
-  // For a POC, we're using header-based token auth instead of cookies
-  useSecureCookies: false,
-  jwt: {
-    // Disable cookie encryption to allow custom token handling
-    encode: async ({ token, secret }) => {
-      if (!token) return "";
-      return JSON.stringify(token);
-    },
-    decode: async ({ token, secret }) => {
-      if (!token) return null;
-      try {
-        return JSON.parse(token);
-      } catch (e) {
-        return null;
-      }
-    },
-  },
+  debug: process.env.NODE_ENV === 'development',
 };
 
 /**
- * Get the current user's session from the server or from request headers
+ * Get the current user's session from the server
  *
  * This function should be used in server components and API routes
- * to get the current user's session. It supports both NextAuth's getServerSession
- * and reading from Authorization header for API access.
+ * to get the current user's session.
  *
- * @param request Optional request object to extract token from headers
+ * @param request Optional request object
  */
 export async function getSession(request?: Request) {
-  // First try to get the session from NextAuth (for web pages)
-  const nextAuthSession = await getServerSession(authOptions);
-  if (nextAuthSession) return nextAuthSession;
-  
-  // If that fails and we have a request, try to get from Authorization header
-  if (request) {
-    const authHeader = request.headers.get('authorization');
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      try {
-        const tokenString = authHeader.substring(7);
-        const token = JSON.parse(tokenString);
-        
-        // Construct a session-like object from the token
-        return {
-          user: {
-            id: token.id,
-            name: token.name,
-            email: token.email,
-            role: token.role,
-            departmentId: token.departmentId
-          },
-          expires: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString()
-        };
-      } catch (error) {
-        console.error('Error parsing token from Authorization header:', error);
-      }
-    }
-    
-    // Try the custom header as well
-    const customTokenHeader = request.headers.get('x-auth-token');
-    if (customTokenHeader) {
-      try {
-        const token = JSON.parse(customTokenHeader);
-        return {
-          user: {
-            id: token.id,
-            name: token.name,
-            email: token.email,
-            role: token.role,
-            departmentId: token.departmentId
-          },
-          expires: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString()
-        };
-      } catch (error) {
-        console.error('Error parsing token from custom header:', error);
-      }
-    }
-  }
-  
-  return null;
+  // Get the session from NextAuth
+  const session = await getServerSession(authOptions);
+  return session;
 }
 
 /**
- * Get the current user from the session or token
+ * Get the current user from the session
  *
  * This function should be used in server components and API routes
  * to get the current user.
  *
- * @param request Optional request object to extract token from headers
+ * @param request Optional request object
  */
 export async function getCurrentUser(request?: Request) {
   const session = await getSession(request);

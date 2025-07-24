@@ -19,39 +19,19 @@ interface ExtendedUser {
  *
  * This hook provides functions for signing in, signing out, and checking auth status
  * It also provides loading and error states for better UX
- * Updated to support token-based authentication without cookies
+ * Updated to use standard session-based authentication
  */
 export function useAuth() {
   const { data: session, status } = useSession();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [authToken, setAuthToken] = useState<string | null>(null);
   const router = useRouter();
   
-  const isAuthenticated = status === "authenticated" || !!authToken;
+  const isAuthenticated = status === "authenticated";
   const loading = status === "loading" || isLoading;
   
-  // Extract user from session or token
+  // Extract user from session
   const user = session?.user as ExtendedUser | undefined;
-  
-  // Store token in localStorage when session changes
-  useEffect(() => {
-    if (session?.user) {
-      // If we have a session, store it as a token
-      const token = JSON.stringify({
-        id: session.user.id,
-        name: session.user.name,
-        email: session.user.email,
-        role: session.user.role,
-        departmentId: session.user.departmentId,
-        expires: session.expires
-      });
-      
-      // Store in localStorage for API requests
-      localStorage.setItem('auth_token', token);
-      setAuthToken(token);
-    }
-  }, [session]);
   
   /**
    * Sign in with email and password
@@ -63,31 +43,40 @@ export function useAuth() {
    */
   const login = async (email: string, password: string, callbackUrl = "/dashboard") => {
     try {
+      console.log(`Auth Client: Attempting login for ${email} with callbackUrl: ${callbackUrl}`);
       setIsLoading(true);
       setError(null);
       
+      // Perform authentication with NextAuth
       const result = await signIn("credentials", {
         redirect: false,
         email,
         password,
+        callbackUrl, // Pass callbackUrl to NextAuth
       });
+      
+      console.log("Auth Client: SignIn result:", result);
       
       if (result?.error) {
         let errorMessage = "Invalid email or password";
         if (result.error === "No credentials provided") {
           errorMessage = "Please enter your email and password";
         }
+        console.error(`Auth Client: Login error - ${errorMessage}`);
         setError(errorMessage);
         return false;
       }
       
-      // Add token to custom header for future requests
-      const authHeader = document.createElement('meta');
-      authHeader.httpEquiv = 'x-auth-token';
-      authHeader.content = localStorage.getItem('auth_token') || '';
-      document.head.appendChild(authHeader);
+      if (!result?.ok) {
+        console.error("Auth Client: Login failed with unknown error");
+        setError("Login failed. Please try again.");
+        return false;
+      }
       
-      router.push(callbackUrl);
+      // Authentication successful - let UI handle the redirect
+      console.log("Auth Client: Authentication successful");
+      
+      // Return success - let the login page handle redirection
       return true;
     } catch (err) {
       console.error("Login error:", err);
@@ -106,16 +95,6 @@ export function useAuth() {
   const logout = async (callbackUrl = "/") => {
     try {
       setIsLoading(true);
-      // Clear token from localStorage
-      localStorage.removeItem('auth_token');
-      setAuthToken(null);
-      
-      // Remove custom header
-      const authHeader = document.querySelector('meta[http-equiv="x-auth-token"]');
-      if (authHeader) {
-        authHeader.remove();
-      }
-      
       await signOut({ redirect: false });
       router.push(callbackUrl);
     } catch (err) {
@@ -126,12 +105,12 @@ export function useAuth() {
   };
   
   /**
-   * Get the authentication token for API requests
+   * Get the user data for API requests
    *
-   * @returns The authentication token
+   * @returns The user data
    */
-  const getToken = (): string | null => {
-    return localStorage.getItem('auth_token');
+  const getUser = () => {
+    return session?.user;
   };
   
   /**
@@ -196,6 +175,7 @@ export function useAuth() {
     return user.departmentId === resourceDepartmentId;
   };
   
+  
   return {
     user,
     isAuthenticated,
@@ -206,32 +186,26 @@ export function useAuth() {
     hasRole,
     isInDepartment,
     canAccess,
-    getToken,
+    getUser,
   };
 }
 
 /**
- * Helper function to add auth token to fetch requests
+ * Helper function to add authentication to fetch requests
  *
  * @param url The URL to fetch
  * @param options Fetch options
  * @returns The fetch response
  */
 export async function fetchWithAuth(url: string, options: RequestInit = {}) {
-  const token = localStorage.getItem('auth_token');
-  
   const headers: Record<string, string> = {
     ...options.headers as Record<string, string>,
     'Content-Type': 'application/json',
   };
   
-  if (token) {
-    // Add token to Authorization header
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  
   return fetch(url, {
     ...options,
     headers,
+    credentials: 'include', // Include cookies in the request
   });
 }

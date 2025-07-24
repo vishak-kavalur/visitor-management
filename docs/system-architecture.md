@@ -22,6 +22,7 @@ The Visitor Management System (VMS) is a Next.js application designed to manage 
 - **Data Tables**: Reusable table components for Visitors, Hosts, Departments, and Visits
 - **Analytics Charts**: Visual representations of visit data and department statistics
 - **Form Components**: Reusable form fields with validation
+- **Face Verification**: Components for capturing and verifying visitor faces during check-in
 
 ### 2. Backend Components
 
@@ -30,6 +31,7 @@ The Visitor Management System (VMS) is a Next.js application designed to manage 
 - **Database Integration**: MongoDB connection and model definitions
 - **Validation Layer**: Request validation using Zod schemas
 - **Error Handling**: Standardized error responses
+- **Face Recognition Integration**: Services that connect to external face recognition API
 
 ### 3. Database Models
 
@@ -146,3 +148,49 @@ The system implements a centralized error handling approach:
 - Database connection pooling
 - Optimized MongoDB indexing strategy
 - Serverless architecture for automatic scaling
+
+## External Integrations
+
+### Face Recognition System
+
+The Visitor Management System integrates with an external face recognition API for enhancing security and streamlining the visitor check-in process.
+
+#### Integration Architecture
+
+```
+┌─────────────────────┐      ┌─────────────────────────┐
+│ Visitor Management  │      │                         │
+│      System         │◄────►│  Face Recognition API   │
+└─────────────────────┘      │                         │
+                             └─────────────────────────┘
+```
+
+#### Integration Points
+
+1. **Visit Approval Process**:
+   - When a visit is approved, the system automatically registers the visitor's face
+   - The visitor's ID is used as the subject ID in the face recognition system
+   - Face images are securely transmitted to the recognition API
+
+2. **Check-In/Check-Out Process**:
+   - During check-in or check-out, captured face images are sent to the recognition API
+   - The API returns similarity scores and matched visitor IDs
+   - Results above the 0.9 similarity threshold trigger automatic status updates:
+     - For check-in: Status changes from "Approved" to "CheckedIn" and checkInTimestamp is set
+     - For check-out: Status changes from "CheckedIn" to "CheckedOut" and checkOutTimestamp is set
+
+#### Technical Details
+
+- **API Base URL**: http://52.66.95.208:8000/api/v1/recognition/
+- **Authentication**: x-api-token header for secure communication
+- **Endpoints Used**:
+  - `/subjects` - For registering visitor IDs
+  - `/faces` - For uploading face images
+  - `/recognize` - For face verification during check-in
+
+#### Security Considerations
+
+- Base64-encoded images are used for transmission
+- API communication is secured via authentication tokens
+- Personal data is handled according to privacy regulations
+- Face recognition thresholds are set to minimize false positives
