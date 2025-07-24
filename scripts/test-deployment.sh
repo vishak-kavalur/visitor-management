@@ -11,7 +11,7 @@ YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
 # Configuration
-HOST_URL=${1:-"http://localhost:3000"}
+HOST_URL=${1:-"http://localhost:4000"}
 ADMIN_EMAIL=${2:-"admin@example.com"}
 ADMIN_PASSWORD=${3:-"Admin@123"}
 

@@ -25,6 +25,20 @@ const loginSchema = z.object({
  * - In a production environment, passwords should be properly hashed with bcrypt or Argon2
  * - Additional security measures like rate limiting should be implemented
  */
+/**
+ * NextAuth.js configuration
+ *
+ * This configures authentication for the Visitor Management System with a cookie-less approach:
+ * - Uses a credentials provider to authenticate against the Host model
+ * - Implements token-based authentication without cookies
+ * - Returns tokens directly instead of storing in cookies
+ * - Adds custom fields to the JWT token and session
+ *
+ * SECURITY NOTICE:
+ * - This implementation uses plaintext password comparison for PoC purposes only
+ * - In a production environment, passwords should be properly hashed with bcrypt or Argon2
+ * - Additional security measures like rate limiting should be implemented
+ */
 const handler = NextAuth({
   providers: [
     CredentialsProvider({
@@ -107,16 +121,21 @@ const handler = NextAuth({
     error: '/login',
   },
   secret: process.env.NEXTAUTH_SECRET,
-  // Add security headers
-  cookies: {
-    sessionToken: {
-      name: `next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-      },
+  // For a POC, we're using header-based token auth instead of cookies
+  useSecureCookies: false,
+  jwt: {
+    // Disable cookie encryption to allow custom token handling
+    encode: async ({ token, secret }) => {
+      if (!token) return "";
+      return JSON.stringify(token);
+    },
+    decode: async ({ token, secret }) => {
+      if (!token) return null;
+      try {
+        return JSON.parse(token);
+      } catch (e) {
+        return null;
+      }
     },
   },
 });

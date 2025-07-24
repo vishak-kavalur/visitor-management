@@ -1,18 +1,19 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Output as standalone for Docker deployment
-  output: 'standalone',
-  
   // Enable static image imports for profile pictures, logos, etc.
   images: {
-    domains: ['localhost'],
-    // Add other domains as needed for production
+    domains: ['localhost', '3.111.198.202'],
   },
   
   // Environment variables available on the client side
   env: {
-    SOCKET_SERVER_URL: process.env.SOCKET_SERVER_URL || 'http://localhost:3001',
+    SOCKET_SERVER_URL: process.env.SOCKET_SERVER_URL || 'http://localhost:4001',
+    NEXT_PUBLIC_SOCKET_URL: process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:4001',
+    NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000',
+    REMOTE_SERVER_URL: process.env.REMOTE_SERVER_URL || 'http://3.111.198.202',
+    API_AUTH_DISABLED: process.env.API_AUTH_DISABLED || 'true',
+    WEB_AUTH_ENABLED: process.env.WEB_AUTH_ENABLED || 'true',
   },
 
   // Optional: Add headers for security

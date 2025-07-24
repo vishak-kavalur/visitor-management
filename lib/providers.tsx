@@ -6,6 +6,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import theme from './theme';
 import ErrorBoundary from '../components/ui/ErrorBoundary';
 import NotificationsProvider from '../components/ui/Notifications';
+import RealtimeProvider from '../components/ui/RealtimeProvider';
 
 type ProvidersProps = {
   children: React.ReactNode;
@@ -20,6 +21,7 @@ type ProvidersProps = {
  * - ThemeProvider for MUI theming
  * - CssBaseline for MUI baseline styles
  * - NotificationsProvider for toast notifications
+ * - RealtimeProvider for socket.io connections
  */
 export default function Providers({ children }: ProvidersProps) {
   return (
@@ -28,7 +30,9 @@ export default function Providers({ children }: ProvidersProps) {
         <ThemeProvider theme={theme}>
           <CssBaseline />
           <NotificationsProvider />
-          {children}
+          <RealtimeProvider>
+            {children}
+          </RealtimeProvider>
         </ThemeProvider>
       </SessionProvider>
     </ErrorBoundary>

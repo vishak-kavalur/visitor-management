@@ -13,11 +13,11 @@ This document outlines the comprehensive testing procedures for the Visitor Mana
 ### 1.2 Authentication Testing
 - Test login/logout functionality
 - Verify role-based access control
-- Test session management
+- Test token-based authentication (JWT) without cookies
 - Validate permission boundaries
 
 ### 1.3 API Testing
-- Validate all API endpoints
+- Validate all API endpoints (which no longer require authentication)
 - Check error handling and status codes
 - Test request payload validation
 - Verify response formats
@@ -42,14 +42,14 @@ This document outlines the comprehensive testing procedures for the Visitor Mana
 
 ### 1.7 Integration Testing
 - Test interaction between system components
-- Verify third-party integrations (if any)
+- Test Socket.IO real-time communication
 - Database connection and operations
 
 ## 2. Test Environment Setup
 
 ### 2.1 Local Development Environment
 - Node.js 18.x or later
-- MongoDB 7.0 or later
+- MongoDB 7.0 or later (running locally on port 27017)
 - Modern web browser (Chrome, Firefox, Safari, Edge)
 
 ### 2.2 Testing Environment
@@ -69,9 +69,9 @@ This document outlines the comprehensive testing procedures for the Visitor Mana
 1. Test user registration with valid data
 2. Test login with valid credentials
 3. Test login with invalid credentials
-4. Test password reset functionality
+4. Test token-based authentication flow
 5. Test account lockout after multiple failed attempts
-6. Test session timeout and renewal
+6. Test token expiration and renewal
 
 ### 3.2 Visitor Management
 1. Test visitor registration with valid data
@@ -102,7 +102,14 @@ This document outlines the comprehensive testing procedures for the Visitor Mana
 4. Test user management capabilities
 5. Test audit log functionality
 
-### 3.6 Cross-Browser Testing
+### 3.6 Real-time Communication
+1. Test Socket.IO server connection on port 4001
+2. Test real-time notifications for visit status changes
+3. Test room-based event subscription
+4. Test event broadcasting to relevant clients
+5. Test connection resilience (reconnection, error handling)
+
+### 3.7 Cross-Browser Testing
 Test the application on:
 - Google Chrome (latest)
 - Mozilla Firefox (latest)
@@ -121,6 +128,7 @@ Test the application on:
 - Test interactions between components
 - Verify data flow between modules
 - Test database operations
+- Test Socket.IO event handling
 
 ### 4.3 End-to-End Testing
 Execute the end-to-end testing script:
@@ -138,23 +146,38 @@ This script tests:
 - Visit lifecycle
 - Analytics data
 - Dashboard functionality
+- Real-time communication
 
 ### 4.4 API Testing
 Test all API endpoints for:
 - Correct status codes
 - Proper response structure
 - Error handling
-- Authentication requirements
+- Proper data access without authentication
 - Rate limiting behavior
 
-### 4.5 Deployment Testing
+### 4.5 Socket.IO Testing
+Test the Socket.IO server functionality:
+```bash
+npm run test:socket
+```
+
+This script tests:
+- Connection and disconnection handling
+- Event emission and reception
+- Room-based subscriptions
+- Error handling
+- Connection resilience
+
+### 4.6 Deployment Testing
 Execute the deployment testing script:
 ```bash
 ./scripts/test-deployment.sh [base_url] [admin_email] [admin_password]
 ```
 
 This script validates:
-- Application health
+- Application health on port 4000
+- Socket.IO server health on port 4001
 - Database connectivity
 - Authentication
 - Core API functionality
@@ -173,6 +196,7 @@ Regression test checklist:
 2. Manually test core user flows
 3. Verify fixed bugs don't reappear
 4. Check for unintended side effects
+5. Test real-time functionality
 
 ## 6. Performance Testing
 
@@ -181,6 +205,7 @@ Regression test checklist:
 - Measure response times under load
 - Identify bottlenecks
 - Test database query performance
+- Test Socket.IO server performance under load
 
 ### 6.2 Stress Testing
 - Push the system beyond normal operation
@@ -193,14 +218,15 @@ Regression test checklist:
 - Monitor for memory leaks
 - Check database connection stability
 - Verify scheduled tasks execute properly
+- Monitor Socket.IO server stability
 
 ## 7. Security Testing
 
 ### 7.1 Authentication Security
-- Test password strength requirements
-- Verify account lockout policies
 - Test token-based authentication
-- Check session management
+- Verify token validation and expiration
+- Test proper token storage and transmission
+- Check authorization based on token payload
 
 ### 7.2 Authorization Testing
 - Verify role-based permissions
@@ -229,6 +255,7 @@ The testing is considered successful when:
 3. Performance meets the following criteria:
    - Page load time < 2 seconds
    - API response time < 500ms
+   - Socket.IO event latency < 200ms
    - System handles 100+ concurrent users
    - No memory leaks detected
 4. Security testing reveals no critical or high vulnerabilities
@@ -262,3 +289,23 @@ Maintain the following test documentation:
 - Performance test results
 
 Update this documentation as the system evolves to ensure testing procedures remain current and effective.
+
+## 11. Port Testing
+
+The application now runs on specific ports that need to be verified:
+
+1. Test web application on port 4000
+   - Verify application starts successfully on this port
+   - Check all routes and API endpoints are accessible
+   - Ensure environment variables are correctly configured for this port
+
+2. Test Socket.IO server on port 4001
+   - Verify Socket.IO server starts successfully
+   - Test client connections to this port
+   - Validate event transmission and reception
+   - Test room-based event subscription
+
+3. Test MongoDB connection on port 27017
+   - Verify application connects to local MongoDB instance
+   - Test database operations (create, read, update, delete)
+   - Check connection resilience (reconnection on failure)

@@ -88,7 +88,7 @@ jobs:
             docker-compose pull
             docker-compose down
             docker-compose up -d
-            ./scripts/test-deployment.sh http://localhost:3000
+            ./scripts/test-deployment.sh http://localhost:4000
 
   deploy-production:
     name: Deploy to Production

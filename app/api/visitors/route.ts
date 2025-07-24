@@ -19,16 +19,8 @@ import {
  */
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return createErrorResponse(
-        'Authentication required to access this resource',
-        ErrorType.AUTHENTICATION,
-        HTTP_STATUS.UNAUTHORIZED
-      );
-    }
-
+    // Authentication check removed for DB API endpoints in POC
+    
     // Connect to database
     await dbConnect();
     
@@ -90,16 +82,10 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return createErrorResponse(
-        'Authentication required to access this resource',
-        ErrorType.AUTHENTICATION,
-        HTTP_STATUS.UNAUTHORIZED
-      );
-    }
+    // Authentication check removed for DB API endpoints in POC
     
+    // For role-based checks, we'll bypass them in the POC but keep the code commented
+    /*
     // Check authorization
     if (!hasRole(session.user?.role, 'Admin')) {
       return createErrorResponse(
@@ -108,6 +94,7 @@ export async function POST(request: NextRequest) {
         HTTP_STATUS.FORBIDDEN
       );
     }
+    */
 
     // Connect to database
     await dbConnect();

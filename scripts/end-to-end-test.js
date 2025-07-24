@@ -19,7 +19,7 @@ import fs from 'fs';
 import path from 'path';
 
 // Configuration
-const BASE_URL = process.argv[2] || 'http://localhost:3000';
+const BASE_URL = process.argv[2] || 'http://localhost:4000';
 const ADMIN_EMAIL = process.argv[3] || 'admin@example.com';
 const ADMIN_PASSWORD = process.argv[4] || 'Admin@123';
 

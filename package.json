@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 4000",
+    "socket": "node lib/realtime/server.mjs",
     "lint": "next lint"
   },
   "dependencies": {
@@ -17,6 +18,7 @@
     "@types/bcrypt": "^6.0.0",
     "@types/mui-datatables": "^4.3.12",
     "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.2",
     "date-fns": "^4.1.0",
     "mongodb": "^6.17.0",
     "mongoose": "^8.16.4",
@@ -28,6 +30,7 @@
     "react-hook-form": "^7.60.0",
     "react-toastify": "^11.0.5",
     "recharts": "^3.1.0",
+    "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "zod": "^4.0.5"
   },

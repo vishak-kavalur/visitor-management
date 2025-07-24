@@ -2,6 +2,12 @@
 
 This document outlines the database schema for the Visitor Management System, which uses MongoDB with Mongoose ODM.
 
+## MongoDB Configuration
+
+The system is configured to connect to a local MongoDB instance:
+- **Connection URI**: `mongodb://localhost:27017/visitor-management`
+- **Database Name**: `visitor-management`
+
 ## Overview
 
 The Visitor Management System database consists of the following collections:
@@ -130,6 +136,9 @@ Stores information about hosts who can receive visitors.
   updatedAt: Date
 }
 ```
+
+#### Authentication Note
+The system now uses token-based (JWT) authentication without cookies. Tokens are generated based on user credentials and include role and permission information.
 
 #### Indexes
 - `email`: Unique index for faster lookup and authentication
@@ -291,6 +300,9 @@ Stores information about visits to the facility.
 #### Methods
 - `findPendingVisits`: Find all pending visits, optionally filtered by department
 
+#### Real-time Updates
+Visit status changes now trigger real-time notifications through the Socket.IO server running on port 4001.
+
 ---
 
 ### Notifications Collection
@@ -354,6 +366,9 @@ Stores system notifications for users.
 
 #### Methods
 - `findUnreadByRecipient`: Find all unread notifications for a recipient
+
+#### Real-time Delivery
+Notifications are now delivered in real-time through the Socket.IO server, in addition to being stored in the database.
 
 ## Relationships
 
@@ -516,3 +531,14 @@ const departmentsWithHostCounts = await Department.aggregate([
     }
   }
 ]);
+```
+
+## Socket.IO Integration
+
+The database now integrates with a Socket.IO server running on port 4001 for real-time updates. Key events include:
+
+- Database changes in the `visits` collection trigger Socket.IO events
+- Status updates are broadcast to relevant rooms based on department and host IDs
+- Notifications are delivered in real-time through Socket.IO in addition to being stored in the database
+
+This integration provides real-time functionality without requiring polling or frequent API requests.

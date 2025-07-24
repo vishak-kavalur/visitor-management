@@ -21,6 +21,12 @@ The Visitor Management System (VMS) is designed to streamline the process of man
 - Department and host management
 - Real-time dashboard with analytics
 - Role-based access control
+- Real-time notifications via Socket.IO
+
+The system runs on the following components:
+- Main web application: Port 4000
+- Socket.IO real-time server: Port 4001
+- MongoDB database: Local instance on port 27017
 
 The system has three main user roles, each with different permissions:
 
@@ -32,21 +38,33 @@ The system has three main user roles, each with different permissions:
 
 ### Logging In
 
-1. Navigate to the login page at `/login`
+1. Navigate to the login page at `http://localhost:4000/login`
 2. Enter your email address and password
 3. Click "Sign In"
 4. If you've forgotten your password, contact your system administrator
+
+**Note**: The system uses token-based authentication without cookies. Your authentication token is stored securely and automatically managed by the application.
 
 ### Dashboard Overview
 
 After logging in, you'll be directed to the main dashboard, which provides:
 
 - Summary statistics
-- Recent visit information
+- Real-time visit information
 - Pending approvals (if applicable to your role)
 - Navigation to different system sections
 
 The sidebar navigation shows options available to your role.
+
+### Real-time Updates
+
+The system now features real-time updates for:
+- New visitor registrations
+- Visit status changes
+- Approval notifications
+- Check-in and check-out events
+
+These updates appear automatically without needing to refresh the page.
 
 ## SuperAdmin Guide
 
@@ -123,7 +141,7 @@ As a SuperAdmin, you have full access to all system functionality.
 1. Navigate to "Dashboard" or "Visits" in the sidebar
 2. Locate pending visits in the list
 3. Click the "Approve" or "Reject" button for each visit
-4. For approved visits, the visitor will be notified
+4. For approved visits, the visitor and host will receive real-time notifications
 
 ## Admin Guide
 
@@ -145,12 +163,13 @@ Follow the same steps as in the SuperAdmin guide, with these limitations:
 #### Approving or Rejecting Visits
 1. Locate pending visits in the list
 2. Click the "Approve" or "Reject" button for each visit
-3. For approved visits, the visitor and host will be notified
+3. For approved visits, the visitor and host will receive real-time notifications
 
 #### Check-In and Check-Out
 1. When a visitor arrives, locate their approved visit
 2. Click the "Check In" button to record their arrival
 3. When they leave, click the "Check Out" button
+4. These status changes are updated in real-time across all connected devices
 
 ### Managing Visitors
 
@@ -193,11 +212,23 @@ As a Host, you can manage visitors and your own visits.
    - Additional notes (optional)
 4. Click "Submit" to create the visit request
 5. The request will be sent for approval
+6. You'll receive a real-time notification when the request is approved or rejected
 
 #### Tracking Your Visits
 1. Navigate to "Visits" in the sidebar
 2. View the list of your visits
 3. Check the status of each visit (Pending, Approved, Rejected, CheckedIn, CheckedOut)
+4. Status changes are updated in real-time
+
+### Notifications
+
+1. The system now provides real-time notifications for important events
+2. Notifications appear in the notification bell in the top navigation bar
+3. You'll receive notifications for:
+   - Visit request approvals or rejections
+   - Visitor check-ins and check-outs
+   - New visit requests (for admins)
+   - System announcements
 
 ## Common Tasks
 
@@ -234,6 +265,7 @@ As a Host, you can manage visitors and your own visits.
 - Ensure you're using the correct email and password
 - Check if Caps Lock is enabled
 - If you've forgotten your password, contact your system administrator
+- Clear browser cache and cookies if you experience persistent login issues
 
 #### Missing Access
 - If you can't access a feature you believe you should have access to, check with your administrator about your assigned role
@@ -242,6 +274,12 @@ As a Host, you can manage visitors and your own visits.
 - Try refreshing the page
 - Check your internet connection
 - Clear your browser cache
+
+#### Real-time Updates Not Working
+- Ensure your browser supports WebSockets
+- Check if a firewall is blocking port 4001
+- Try refreshing the page to reestablish the connection
+- Verify that both application servers (port 4000 and 4001) are running
 
 ### Getting Help
 
@@ -256,5 +294,12 @@ If you encounter any issues not covered in this guide:
 The Visitor Management System works best with:
 - Modern browsers (Chrome, Firefox, Safari, Edge)
 - JavaScript enabled
-- Cookies enabled
+- WebSockets enabled
 - Stable internet connection
+
+### Network Requirements
+
+The system requires the following network access:
+- Web application: Port 4000
+- Socket.IO server: Port 4001
+- MongoDB database: Port 27017 (server-side only)

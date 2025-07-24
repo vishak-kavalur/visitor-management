@@ -2,11 +2,49 @@
 
 This document provides comprehensive documentation for all API endpoints in the Visitor Management System.
 
+## API Overview
+
+The Visitor Management System API:
+- Runs on port 4000 (http://localhost:4000)
+- Uses RESTful conventions
+- Returns JSON responses
+- **No longer requires authentication for API endpoints** (authentication is only required for web pages)
+- Supports token-based authentication (JWT) without cookies for authenticated operations
+
+## Response Format
+
+All API responses follow this standard format:
+
+```json
+{
+  "success": true,
+  "data": {},  // Response data
+  "message": "Success message",
+  "pagination": {}  // Pagination details (for list endpoints)
+}
+```
+
+Error responses:
+
+```json
+{
+  "success": false,
+  "error": {
+    "message": "Error message",
+    "details": "Additional error details (optional)",
+    "code": "ERROR_CODE (optional)"
+  },
+  "statusCode": 400
+}
+```
+
 ## Authentication
 
 ### POST /api/auth/[...nextauth]
 
 Next.js NextAuth endpoint for authentication. This is automatically handled by NextAuth.js.
+
+**Note:** The system now uses token-based authentication without cookies. Tokens are passed via Authorization header.
 
 ### GET /api/auth/status
 
@@ -384,7 +422,7 @@ Delete a visit.
 
 ### GET /api/admin/departments
 
-Get a paginated list of departments. Requires SuperAdmin role.
+Get a paginated list of departments.
 
 **Query Parameters:**
 - `page`: Page number (default: 1)
@@ -418,7 +456,7 @@ Get a paginated list of departments. Requires SuperAdmin role.
 
 ### GET /api/admin/departments/:id
 
-Get a single department by ID. Requires SuperAdmin role.
+Get a single department by ID.
 
 **Response:**
 ```json
@@ -441,7 +479,7 @@ Get a single department by ID. Requires SuperAdmin role.
 
 ### POST /api/admin/departments
 
-Create a new department. Requires SuperAdmin role.
+Create a new department.
 
 **Request Body:**
 ```json
@@ -472,7 +510,7 @@ Create a new department. Requires SuperAdmin role.
 
 ### PUT /api/admin/departments/:id
 
-Update a department. Requires SuperAdmin role.
+Update a department.
 
 **Request Body:**
 ```json
@@ -503,7 +541,7 @@ Update a department. Requires SuperAdmin role.
 
 ### DELETE /api/admin/departments/:id
 
-Delete a department. Requires SuperAdmin role.
+Delete a department.
 
 **Response:**
 ```json
@@ -520,7 +558,7 @@ Delete a department. Requires SuperAdmin role.
 
 ### GET /api/admin/hosts
 
-Get a paginated list of hosts. Requires Admin or SuperAdmin role.
+Get a paginated list of hosts.
 
 **Query Parameters:**
 - `page`: Page number (default: 1)
@@ -560,7 +598,7 @@ Get a paginated list of hosts. Requires Admin or SuperAdmin role.
 
 ### GET /api/admin/hosts/:id
 
-Get a single host by ID. Requires Admin or SuperAdmin role.
+Get a single host by ID.
 
 **Response:**
 ```json
@@ -587,7 +625,7 @@ Get a single host by ID. Requires Admin or SuperAdmin role.
 
 ### POST /api/admin/hosts
 
-Create a new host. Requires Admin or SuperAdmin role.
+Create a new host.
 
 **Request Body:**
 ```json
@@ -619,7 +657,7 @@ Create a new host. Requires Admin or SuperAdmin role.
 
 ### PUT /api/admin/hosts/:id
 
-Update a host. Requires Admin or SuperAdmin role.
+Update a host.
 
 **Request Body:**
 ```json
@@ -649,7 +687,7 @@ Update a host. Requires Admin or SuperAdmin role.
 
 ### DELETE /api/admin/hosts/:id
 
-Delete a host. Requires SuperAdmin role.
+Delete a host.
 
 **Response:**
 ```json
@@ -857,23 +895,43 @@ Get department analytics data.
 }
 ```
 
-## Error Responses
+## Socket.IO Realtime API
 
-All API endpoints follow a consistent error response format:
+The system now includes a Socket.IO server running on port 4001 for real-time communication.
 
-```json
-{
-  "success": false,
-  "error": {
-    "message": "Error message",
-    "details": "Additional error details (optional)",
-    "code": "ERROR_CODE (optional)"
-  },
-  "statusCode": 400
-}
-```
+### Connection
 
-### Common HTTP Status Codes
+Connect to the Socket.IO server at: `http://localhost:4001`
+
+### Events
+
+#### Client Events (sent from client to server)
+
+| Event | Description | Payload |
+|-------|-------------|---------|
+| `join:room` | Join a specific room for notifications | `{ room: "roomName" }` |
+| `leave:room` | Leave a notification room | `{ room: "roomName" }` |
+
+#### Server Events (sent from server to client)
+
+| Event | Description | Payload |
+|-------|-------------|---------|
+| `visitor:created` | New visitor registered | Visitor object |
+| `visit:created` | New visit request submitted | Visit object |
+| `visit:updated` | Visit status changed | Visit object |
+| `visit:approved` | Visit request approved | Visit object |
+| `visit:rejected` | Visit request rejected | Visit object |
+| `visit:checkedIn` | Visitor checked in | Visit object |
+| `visit:checkedOut` | Visitor checked out | Visit object |
+
+### Room Types
+
+- `department:{departmentId}` - Notifications for a specific department
+- `host:{hostId}` - Notifications for a specific host
+- `admin` - Admin-level notifications
+- `global` - System-wide notifications
+
+## Common HTTP Status Codes
 
 - `200 OK`: Request succeeded
 - `201 Created`: Resource created successfully
@@ -884,26 +942,3 @@ All API endpoints follow a consistent error response format:
 - `409 Conflict`: Resource conflict (e.g., duplicate entry)
 - `422 Unprocessable Entity`: Validation error
 - `500 Internal Server Error`: Server error
-
-## API Response Structure
-
-All successful API responses follow this structure:
-
-```json
-{
-  "success": true,
-  "data": {}, // Response data
-  "message": "Success message",
-  "pagination": {} // Pagination details (for list endpoints)
-}
-```
-
-Pagination object structure:
-
-```json
-{
-  "total": 100, // Total number of items
-  "page": 1, // Current page
-  "limit": 10, // Items per page
-  "pages": 10 // Total number of pages
-}

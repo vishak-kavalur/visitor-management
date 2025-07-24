@@ -63,7 +63,7 @@ services:
     networks:
       - vms-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:3000/api/health"]
+      test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:4000/api/health"]
       interval: 30s
       timeout: 5s
       retries: 3

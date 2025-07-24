@@ -1,31 +1,60 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { jwtVerify } from 'jose';
 
 /**
  * Middleware to protect routes based on authentication and role
- * 
+ *
  * This middleware runs before requests are processed and can redirect
  * users based on their authentication status and role.
+ * Updated to support token-based authentication without cookies.
  */
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   
+  // Check if web authentication is enabled (default to true if not specified)
+  const webAuthEnabled = process.env.WEB_AUTH_ENABLED !== 'false';
+  
+  // If web authentication is disabled, all paths are considered public
+  if (!webAuthEnabled) {
+    return NextResponse.next();
+  }
+  
   // Define public paths that don't require authentication
-  const isPublicPath = 
-    path === '/' || 
-    path === '/login' || 
-    path.startsWith('/api/') || 
+  const isPublicPath =
+    path === '/' ||
+    path === '/login' ||
+    path.startsWith('/api/') || // All API endpoints are public for POC
     path.includes('.');
 
-  // Get the token if it exists
-  const token = await getToken({ 
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET
-  });
+  // Get token from Authorization header if it exists
+  let token = null;
+  const authHeader = request.headers.get('authorization');
+  
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const tokenString = authHeader.substring(7);
+    try {
+      // If the header contains a valid token, use it
+      token = JSON.parse(tokenString);
+    } catch (error) {
+      console.error('Invalid token format in header', error);
+    }
+  }
+
+  // Fallback: Check for token in custom header (for web pages)
+  if (!token) {
+    const customTokenHeader = request.headers.get('x-auth-token');
+    if (customTokenHeader) {
+      try {
+        token = JSON.parse(customTokenHeader);
+      } catch (error) {
+        console.error('Invalid token format in custom header', error);
+      }
+    }
+  }
   
   const isAuthenticated = !!token;
 
-  // Redirect unauthenticated users to login page
+  // Redirect unauthenticated users to login page (only for web pages, not for API routes)
   if (!isPublicPath && !isAuthenticated) {
     return NextResponse.redirect(
       new URL(`/login?callbackUrl=${encodeURIComponent(path)}`, request.url)
